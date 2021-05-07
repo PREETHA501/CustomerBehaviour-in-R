@@ -1,0 +1,152 @@
+---
+title: 'PROJECT : MARKET ANALYSIS'
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+   fig_height: 4
+   highlight: pygments
+   theme: spacelab
+---
+### Reg. No: 17MIS1069
+### Name:  PREETHA.S
+  
+* * *
+
+## Implementing the Decision Tree Classification algorithm using R packages
+
+## Import required packages
+
+```{r message=FALSE, warning=FALSE}
+library(rpart)
+library(rpart.plot)
+library(dplyr)
+library(tidyverse)
+library(caret)
+library(ggplot2)
+theme_set(theme_bw())
+require(tigerstats)
+library(corrplot)
+library(DataExplorer)
+require(caTools)
+library(plyr)
+```
+
+## Import the dataset (Customer_Behaviour)
+
+```{r}
+data <- read.csv("D:/4th year/FALL_20_21/DATASETS/Customer_Behaviour.csv") 
+```
+
+## Dimentions of dataset
+
+```{r}
+dim(data)
+```
+
+
+## Quick glance at the data
+
+```{r}
+str(data)
+head(data)
+```
+
+## Checking for missing values 
+
+```{r}
+sum(is.na(data))
+```
+
+INFERENCE : No (NA/NULL)values in our dataset.
+
+## Transforming Male & Female values to 0 and 1
+
+```{r}
+data$Gender <- revalue(data$Gender, c("Female"=1))
+data$Gender <- revalue(data$Gender, c("Male"=0))
+head(data$Gender)
+```
+
+# Converting char to numeric
+
+```{r}
+data$Gender = as.numeric(data$Gender)
+```
+
+
+```{r}
+glimpse(data)
+```
+
+# Choosing dependent(Y) and independent(X) variables :
+
+```{r}
+correlation <- cor(x=data[,(2:5)], method = "pearson")
+correlation
+```
+
+INFERENCE : The independent variables(x) are only correlated with the dependent variable(y).Here, we can see that these Age, and EstimatedSalary are highly correlated with sales variable by having these respective R values(0.62245420,0.36208303).
+
+## Split the data into train data and test data
+
+```{r}
+set.seed(123)
+training.samples <- data$Purchased %>%
+ createDataPartition(p = 0.8, list = FALSE)
+train.data <- data[training.samples, ]
+test.data <- data[-training.samples, ]
+head(train.data)
+```
+
+
+Function prop.table() combined with table() to verify if the randomization process is correct
+
+```{r}
+prop.table(table(train.data$Purchased))
+```
+
+```{r}
+prop.table(table(test.data$Purchased))
+```
+
+## Build the Decision Tree model
+
+```{r}
+fit <- rpart(Purchased~., data = train.data, method = 'class')
+rpart.plot(fit, extra = 100)
+rpart.plot(fit)
+```
+
+
+## Make a prediction
+
+## Dimentions of test dataset
+```{r}
+dim(test.data)
+```
+
+## Predicting :
+
+```{r}
+predict_unseen <-predict(fit, test.data, type = 'class')
+table_mat <- table(test.data$Purchased, predict_unseen)
+table_mat
+```
+
+INFERENCE :
+The model correctly predicted 53 not_purchased result but it wrongly classified 5 purchased result. By analogy, the model misclassified only 1 result as purchased while they turned out to be not_purchased.
+
+## Compute the accuracy test from the confusion matrix
+
+```{r}
+accuracy_Test <- sum(diag(table_mat)) / sum(table_mat)
+print(paste('Accuracy for testdata', accuracy_Test))
+```
+
+* * *
+
+
+
+
+
